@@ -396,6 +396,13 @@
                 </div>
                 
                 <div class="control-group">
+                    <label>DEBUG:</label>
+                    <button class="btn" onclick="testConnection()">
+                        🔍 TEST
+                    </button>
+                </div>
+                
+                <div class="control-group">
                     <label>PASSWORD:</label>
                     <button class="btn" onclick="changePassword()">
                         🔑 CHANGE
@@ -526,16 +533,25 @@
             }
             
             if (!url.includes('supabase.co')) {
-                alert('❌ Invalid Supabase URL');
+                alert('❌ Invalid Supabase URL. Should contain "supabase.co"');
+                return;
+            }
+            
+            if (key.length < 100) {
+                alert('❌ API key seems too short. Make sure you copied the complete key.');
                 return;
             }
             
             const config = { url, key };
             localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
             
+            alert('✅ Backend configured! Initializing connection...');
             document.getElementById('setupSection').style.display = 'none';
-            initializeBackend();
-            alert('✅ Backend configured! Initializing...');
+            
+            // Initialize with delay to show message
+            setTimeout(() => {
+                initializeBackend();
+            }, 500);
         }
         
         // Initialize backend
@@ -546,29 +562,62 @@
                 return false;
             }
             
-            const config = JSON.parse(configStr);
-            
-            // Create Supabase client (using REST API)
-            supabaseClient = {
-                url: config.url,
-                key: config.key,
-                headers: {
-                    'apikey': config.key,
-                    'Authorization': `Bearer ${config.key}`,
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            // Check if table exists, if not create it
             try {
-                await createTableIfNotExists();
+                const config = JSON.parse(configStr);
+                
+                // Validate config
+                if (!config.url || !config.key) {
+                    throw new Error('Invalid configuration');
+                }
+                
+                // Create Supabase client
+                supabaseClient = {
+                    url: config.url,
+                    key: config.key,
+                    headers: {
+                        'apikey': config.key,
+                        'Authorization': `Bearer ${config.key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    }
+                };
+                
+                console.log('Backend initialized with URL:', config.url);
+                
+                // Test connection
+                const testResponse = await fetch(
+                    `${supabaseClient.url}/rest/v1/attendance?limit=1`,
+                    { 
+                        headers: supabaseClient.headers,
+                        method: 'GET'
+                    }
+                );
+                
+                if (!testResponse.ok) {
+                    const errorText = await testResponse.text();
+                    console.error('Connection test failed:', errorText);
+                    throw new Error(`Connection failed: ${testResponse.status}`);
+                }
+                
+                console.log('Connection test successful');
                 updateSyncStatus('synced', '✅ Connected');
                 startAutoSync();
                 await loadFromBackend();
                 return true;
             } catch (error) {
                 console.error('Backend init error:', error);
-                updateSyncStatus('error', '❌ Connection Failed');
+                updateSyncStatus('error', '❌ ' + error.message);
+                
+                // Show helpful error message
+                alert(`⚠️ Backend Connection Failed\n\n` +
+                      `Error: ${error.message}\n\n` +
+                      `Please check:\n` +
+                      `1. Your internet connection\n` +
+                      `2. Supabase URL is correct\n` +
+                      `3. API key is complete\n` +
+                      `4. Database table was created\n\n` +
+                      `The app will still work locally.`);
+                
                 return false;
             }
         }
@@ -597,7 +646,10 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
         
         // Load data from backend
         async function loadFromBackend() {
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                console.log('No client configured');
+                return;
+            }
             
             updateSyncStatus('syncing', '⏳ Loading...');
             
@@ -605,14 +657,26 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
                 const month = parseInt(document.getElementById('month').value);
                 const year = parseInt(document.getElementById('year').value);
                 
+                console.log('Loading data for:', month, year);
+                
                 const response = await fetch(
                     `${supabaseClient.url}/rest/v1/attendance?month=eq.${month}&year=eq.${year}`,
-                    { headers: supabaseClient.headers }
+                    { 
+                        headers: supabaseClient.headers,
+                        method: 'GET'
+                    }
                 );
                 
-                if (!response.ok) throw new Error('Failed to load');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`Failed to load: ${response.status} - ${errorText}`);
+                }
                 
                 const data = await response.json();
+                console.log('Loaded records:', data.length);
                 
                 // Convert to our format
                 const key = `${year}-${month}`;
@@ -623,6 +687,7 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
                     });
                 }
                 
+                // Apply loaded data
                 data.forEach(record => {
                     if (attendanceData[key][record.employee]) {
                         attendanceData[key][record.employee][record.day - 1] = record.status;
@@ -630,10 +695,13 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
                 });
                 
                 renderTable();
-                updateSyncStatus('synced', '✅ Synced');
+                updateSyncStatus('synced', `✅ Synced (${data.length} records)`);
             } catch (error) {
                 console.error('Load error:', error);
-                updateSyncStatus('error', '❌ Load Failed');
+                updateSyncStatus('error', '❌ ' + error.message.substring(0, 30));
+                
+                // Still render with local data
+                renderTable();
             }
         }
         
@@ -680,7 +748,93 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
         
         // Manual sync
         async function manualSync() {
+            if (!supabaseClient) {
+                alert('⚠️ Backend not configured. Please configure backend first.');
+                return;
+            }
             await loadFromBackend();
+        }
+        
+        // Test connection
+        async function testConnection() {
+            if (!supabaseClient) {
+                alert('⚠️ Backend not configured.\n\nPlease enter your Supabase credentials in the configuration section.');
+                return;
+            }
+            
+            updateSyncStatus('syncing', '⏳ Testing...');
+            
+            try {
+                console.log('Testing connection to:', supabaseClient.url);
+                
+                // Test 1: Basic connectivity
+                const response = await fetch(
+                    `${supabaseClient.url}/rest/v1/`,
+                    { 
+                        headers: supabaseClient.headers,
+                        method: 'GET'
+                    }
+                );
+                
+                console.log('Basic connectivity:', response.status);
+                
+                // Test 2: Table access
+                const tableResponse = await fetch(
+                    `${supabaseClient.url}/rest/v1/attendance?limit=1`,
+                    { 
+                        headers: supabaseClient.headers,
+                        method: 'GET'
+                    }
+                );
+                
+                console.log('Table access:', tableResponse.status);
+                
+                if (!tableResponse.ok) {
+                    const errorText = await tableResponse.text();
+                    throw new Error(`Table access failed: ${tableResponse.status}\n${errorText}`);
+                }
+                
+                const data = await tableResponse.json();
+                
+                updateSyncStatus('synced', '✅ Connected');
+                alert(`✅ Connection Successful!\n\n` +
+                      `Status: Connected\n` +
+                      `Records found: ${data.length}\n` +
+                      `Table: attendance\n\n` +
+                      `Everything is working correctly!`);
+                      
+            } catch (error) {
+                console.error('Test failed:', error);
+                updateSyncStatus('error', '❌ Test Failed');
+                
+                let helpMessage = '❌ Connection Test Failed\n\n';
+                
+                if (error.message.includes('404')) {
+                    helpMessage += 'Error: Table not found\n\n' +
+                                  'Solution:\n' +
+                                  '1. Open Supabase Dashboard\n' +
+                                  '2. Go to SQL Editor\n' +
+                                  '3. Run the CREATE TABLE script\n' +
+                                  '4. Try test again';
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    helpMessage += 'Error: Authentication failed\n\n' +
+                                  'Solution:\n' +
+                                  '1. Check your API key is correct\n' +
+                                  '2. Make sure you copied the "anon public" key\n' +
+                                  '3. Key should be very long (200+ characters)';
+                } else if (error.message.includes('Failed to fetch')) {
+                    helpMessage += 'Error: Cannot reach server\n\n' +
+                                  'Solution:\n' +
+                                  '1. Check your internet connection\n' +
+                                  '2. Verify Supabase URL is correct\n' +
+                                  '3. URL should start with https://';
+                } else {
+                    helpMessage += `Error: ${error.message}\n\n` +
+                                  'Check browser console (F12) for details.';
+                }
+                
+                alert(helpMessage);
+            }
         }
         
         // Start auto-sync
