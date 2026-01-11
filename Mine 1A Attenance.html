@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24/7 Mine Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border: 3px solid black;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid black;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        
+        .controls {
+            background: #f9f9f9;
+            border: 2px solid black;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid black;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .btn {
+            background: black;
+            color: white;
+            border: 2px solid black;
+            padding: 10px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #333;
+        }
+        
+        .btn-white {
+            background: white;
+            color: black;
+        }
+        
+        .btn-white:hover {
+            background: #f0f0f0;
+        }
+        
+        .btn.active {
+            background: black;
+            color: white;
+        }
+        
+        .legend {
+            background: white;
+            border: 2px solid black;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .attendance-wrapper {
+            overflow-x: auto;
+            border: 2px solid black;
+            margin-bottom: 20px;
+        }
+        
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .attendance-table th,
+        .attendance-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .attendance-table th {
+            background: black;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .attendance-table .employee-col {
+            text-align: left;
+            font-weight: bold;
+            background: #f5f5f5;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+        
+        .attendance-table th.employee-col {
+            z-index: 15;
+        }
+        
+        .attendance-table td {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .attendance-table td:not(.employee-col):not(.total-col):hover {
+            background: #e0e0e0;
+        }
+        
+        .attendance-table td.locked {
+            background: #f9f9f9;
+        }
+        
+        .attendance-table td.locked:hover {
+            background: #f0f0f0;
+        }
+        
+        .attendance-table td[data-value="X"] {
+            background: #e8f5e9;
+            font-weight: bold;
+        }
+        
+        .attendance-table td[data-value="AL"] {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+        
+        .attendance-table td[data-value="A"] {
+            background: #ffebee;
+        }
+        
+        .total-col {
+            background: #f0f0f0 !important;
+            font-weight: bold;
+        }
+        
+        .daily-total-row {
+            background: #e0e0e0;
+            font-weight: bold;
+            font-size: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border: 4px solid black;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .modal-content p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .export-section {
+            background: #f9f9f9;
+            border: 2px solid black;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .export-section h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            border: 2px solid black;
+            margin-top: 10px;
+        }
+        
+        .success-msg {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .instructions {
+            background: white;
+            border: 2px solid black;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .instructions h3 {
+            background: black;
+            color: white;
+            padding: 8px;
+            margin: 15px 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 18px;
+            }
+            
+            .control-row {
+                flex-direction: column;
+            }
+            
+            .legend {
+                font-size: 10px;
+                gap: 8px;
+            }
+            
+            .attendance-table th,
+            .attendance-table td {
+                padding: 5px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MINE 1A SHIFT ATTENDANCE SYSTEM FOR NLC INDIA</h1>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-row">
+                <div class="control-group">
+                    <label>MONTH:</label>
+                    <select id="month" onchange="switchMonth()">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>YEAR:</label>
+                    <select id="year" onchange="switchMonth()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>MODE:</label>
+                    <button id="adminBtn" class="btn btn-white" onclick="toggleAdmin()">
+                        🔒 USER MODE
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <label>EXPORT:</label>
+                    <button class="btn" onclick="showExport()">
+                        📥 EXPORT DATA
+                    </button>
+                </div>
+                
+                <div class="control-group">
+                    <label>PASSWORD:</label>
+                    <button class="btn" onclick="changePassword()">
+                        🔑 CHANGE
+                    </button>
+                </div>
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border: 2px solid #4CAF50; font-size: 12px; font-weight: bold;">
+                💾 AUTO-SAVE: All changes are automatically saved to browser storage
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border: 2px solid #ff9800; font-size: 12px; font-weight: bold;">
+                🔒 DEFAULT ADMIN PASSWORD: <code>FeeniusShyam</code> (Click CHANGE PASSWORD to update)
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <span>A = ABSENT</span>
+            <span>X = PRESENT</span>
+            <span>WO = WEEKLY OFF</span>
+            <span>PH = PUBLIC HOLIDAY</span>
+            <span>AL = ANNUAL LEAVE</span>
+        </div>
+        
+        <!-- Attendance Table -->
+        <div class="attendance-wrapper">
+            <table class="attendance-table" id="attendanceTable">
+                <thead>
+                    <tr id="headerRow">
+                        <th class="employee-col">EMPLOYEE</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Export Section (Hidden by default) -->
+        <div class="export-section" id="exportSection" style="display: none;">
+            <h3>📋 COPY DATA FOR GOOGLE SHEETS</h3>
+            <p>1. Click the button below to copy</p>
+            <p>2. Open Google Sheets and create a new blank sheet</p>
+            <p>3. Click cell A1 and press Ctrl+V (or Cmd+V on Mac)</p>
+            <button class="btn" onclick="copyExportData()">📋 COPY TO CLIPBOARD</button>
+            <div id="exportSuccess" class="success-msg">✅ Copied! Now paste into Google Sheets</div>
+            <textarea id="exportData" readonly></textarea>
+        </div>
+        
+        <!-- Admin Warning Modal -->
+        <div class="modal" id="adminModal">
+            <div class="modal-content">
+                <h2>⚠️ ADMIN EDIT WARNING</h2>
+                <p>This attendance entry has already been marked.</p>
+                <p id="modalMessage"></p>
+                <div class="modal-buttons">
+                    <button class="btn btn-white" onclick="closeModal()">CANCEL</button>
+                    <button class="btn" onclick="confirmEdit()">CONFIRM EDIT</button>
+                </div>
+            </div>
+        </div>
+        
+        
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const EMPLOYEES = [
+            'John Smith',
+            'Sarah Johnson',
+            'Mike Williams',
+            'Emma Brown',
+            'David Jones',
+            'Lisa Garcia',
+            'Robert Miller',
+            'Maria Davis'
+        ];
+        
+        // State
+        let attendanceData = {};
+        let isAdminMode = false;
+        let pendingEdit = null;
+        
+        // Storage keys
+        const STORAGE_KEY = 'mine_attendance_data';
+        const PASSWORD_KEY = 'mine_attendance_admin_password';
+        
+        // Default admin password (change this!)
+        const DEFAULT_PASSWORD = 'FeeniusShyam';
+        
+        // Initialize admin password
+        function initPassword() {
+            const saved = localStorage.getItem(PASSWORD_KEY);
+            if (!saved) {
+                // First time - set default password
+                localStorage.setItem(PASSWORD_KEY, btoa(DEFAULT_PASSWORD)); // Base64 encode
+            }
+        }
+        
+        // Verify password
+        function verifyPassword(input) {
+            const saved = localStorage.getItem(PASSWORD_KEY);
+            return btoa(input) === saved;
+        }
+        
+        // Change password
+        function changePassword() {
+            const oldPass = prompt('Enter current admin password:');
+            if (!oldPass) return;
+            
+            if (!verifyPassword(oldPass)) {
+                alert('❌ Incorrect current password!');
+                return;
+            }
+            
+            const newPass = prompt('Enter new admin password:');
+            if (!newPass || newPass.length < 4) {
+                alert('❌ Password must be at least 4 characters!');
+                return;
+            }
+            
+            const confirmPass = prompt('Confirm new password:');
+            if (newPass !== confirmPass) {
+                alert('❌ Passwords do not match!');
+                return;
+            }
+            
+            localStorage.setItem(PASSWORD_KEY, btoa(newPass));
+            alert('✅ Admin password changed successfully!');
+        }
+        
+        // Load data from localStorage
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    attendanceData = JSON.parse(saved);
+                    console.log('✅ Data loaded from browser storage');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+            }
+            return false;
+        }
+        
+        // Save data to localStorage
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(attendanceData));
+                console.log('✅ Data saved to browser storage');
+                showSaveNotification();
+            } catch (e) {
+                console.error('Error saving data:', e);
+                alert('⚠️ Could not save data. Browser storage may be full.');
+            }
+        }
+        
+        // Show save notification
+        function showSaveNotification() {
+            let notification = document.getElementById('saveNotification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'saveNotification';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    z-index: 2000;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                `;
+                document.body.appendChild(notification);
+            }
+            notification.textContent = '✅ Data Saved';
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+        
+        // Initialize
+        function init() {
+            // Initialize password system
+            initPassword();
+            
+            // Load saved data first
+            loadFromStorage();
+            
+            const now = new Date();
+            document.getElementById('month').value = now.getMonth() + 1;
+            document.getElementById('year').value = now.getFullYear();
+            loadAttendance();
+            renderTable();
+        }
+        
+        // Get days in month
+        function getDaysInMonth(month, year) {
+            return new Date(year, month, 0).getDate();
+        }
+        
+        // Get current key
+        function getCurrentKey() {
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            return `${year}-${month}`;
+        }
+        
+        // Load attendance for current month
+        function loadAttendance() {
+            const key = getCurrentKey();
+            if (!attendanceData[key]) {
+                const month = parseInt(document.getElementById('month').value);
+                const year = parseInt(document.getElementById('year').value);
+                const days = getDaysInMonth(month, year);
+                
+                attendanceData[key] = {};
+                EMPLOYEES.forEach(emp => {
+                    attendanceData[key][emp] = Array(days).fill('A');
+                });
+            }
+        }
+        
+        // Switch month
+        function switchMonth() {
+            loadAttendance();
+            renderTable();
+        }
+        
+        // Toggle admin mode
+        function toggleAdmin() {
+            if (!isAdminMode) {
+                // Trying to enable admin mode - ask for password
+                const password = prompt('🔒 Enter Admin Password:');
+                
+                if (!password) {
+                    return; // User cancelled
+                }
+                
+                if (!verifyPassword(password)) {
+                    alert('❌ Incorrect password! Access denied.');
+                    return;
+                }
+                
+                // Password correct - enable admin mode
+                isAdminMode = true;
+                const btn = document.getElementById('adminBtn');
+                btn.textContent = '🔓 ADMIN MODE';
+                btn.classList.add('active');
+                btn.classList.remove('btn-white');
+                alert('✅ Admin mode enabled');
+            } else {
+                // Disable admin mode
+                isAdminMode = false;
+                const btn = document.getElementById('adminBtn');
+                btn.textContent = '🔒 USER MODE';
+                btn.classList.remove('active');
+                btn.classList.add('btn-white');
+            }
+        }
+        
+        // Render table
+        function renderTable() {
+            const month = parseInt(document.getElementById('month').value);
+            const year = parseInt(document.getElementById('year').value);
+            const days = getDaysInMonth(month, year);
+            const key = getCurrentKey();
+            const data = attendanceData[key];
+            
+            // Header
+            const headerRow = document.getElementById('headerRow');
+            headerRow.innerHTML = '<th class="employee-col">EMPLOYEE</th>';
+            for (let d = 1; d <= days; d++) {
+                headerRow.innerHTML += `<th>${d}</th>`;
+            }
+            headerRow.innerHTML += '<th class="total-col">P</th><th class="total-col">A</th><th class="total-col">AL</th><th class="total-col">WO</th><th class="total-col">PH</th>';
+            
+            // Body
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            EMPLOYEES.forEach((emp, empIdx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="employee-col">${emp}</td>`;
+                
+                for (let d = 0; d < days; d++) {
+                    const value = data[emp][d];
+                    const locked = value !== 'A' ? 'locked' : '';
+                    row.innerHTML += `<td class="${locked}" data-emp="${empIdx}" data-day="${d}" data-value="${value}" onclick="handleCellClick(${empIdx}, ${d})">${value}</td>`;
+                }
+                
+                // Totals
+                const totals = calculateTotals(emp, data);
+                row.innerHTML += `<td class="total-col">${totals.P}</td>`;
+                row.innerHTML += `<td class="total-col">${totals.A}</td>`;
+                row.innerHTML += `<td class="total-col">${totals.AL}</td>`;
+                row.innerHTML += `<td class="total-col">${totals.WO}</td>`;
+                row.innerHTML += `<td class="total-col">${totals.PH}</td>`;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Daily totals
+            const dailyRow = document.createElement('tr');
+            dailyRow.className = 'daily-total-row';
+            dailyRow.innerHTML = '<td class="employee-col">DAILY TOTAL</td>';
+            
+            for (let d = 0; d < days; d++) {
+                const dailyTotals = calculateDailyTotals(d, data);
+                dailyRow.innerHTML += `<td>P:${dailyTotals.P}<br>L:${dailyTotals.L}<br>A:${dailyTotals.A}</td>`;
+            }
+            dailyRow.innerHTML += '<td colspan="5"></td>';
+            
+            tbody.appendChild(dailyRow);
+        }
+        
+        // Calculate totals for employee
+        function calculateTotals(emp, data) {
+            const empData = data[emp];
+            return {
+                P: empData.filter(v => v === 'X').length,
+                A: empData.filter(v => v === 'A').length,
+                AL: empData.filter(v => v === 'AL').length,
+                WO: empData.filter(v => v === 'WO').length,
+                PH: empData.filter(v => v === 'PH').length
+            };
+        }
+        
+        // Calculate daily totals
+        function calculateDailyTotals(day, data) {
+            let P = 0, L = 0, A = 0;
+            EMPLOYEES.forEach(emp => {
+                const value = data[emp][day];
+                if (value === 'X') P++;
+                else if (value === 'AL') L++;
+                else if (value === 'A') A++;
+            });
+            return { P, L, A };
+        }
+        
+        // Handle cell click
+        function handleCellClick(empIdx, day) {
+            const key = getCurrentKey();
+            const emp = EMPLOYEES[empIdx];
+            const current = attendanceData[key][emp][day];
+            
+            if (!isAdminMode && current !== 'A') {
+                return; // Locked for non-admin
+            }
+            
+            if (isAdminMode && current !== 'A') {
+                // Show confirmation
+                pendingEdit = { empIdx, day, current };
+                document.getElementById('modalMessage').textContent = 
+                    `Current value: ${current}\nThis will cycle to the next value.`;
+                document.getElementById('adminModal').classList.add('active');
+            } else {
+                // Cycle value
+                cycleValue(empIdx, day);
+            }
+        }
+        
+        // Cycle value
+        function cycleValue(empIdx, day) {
+            const key = getCurrentKey();
+            const emp = EMPLOYEES[empIdx];
+            const current = attendanceData[key][emp][day];
+            const cycle = ['A', 'X', 'WO', 'PH', 'AL'];
+            const currentIdx = cycle.indexOf(current);
+            const next = cycle[(currentIdx + 1) % cycle.length];
+            
+            attendanceData[key][emp][day] = next;
+            saveToStorage(); // Save after each change
+            renderTable();
+        }
+        
+        // Confirm edit
+        function confirmEdit() {
+            if (pendingEdit) {
+                cycleValue(pendingEdit.empIdx, pendingEdit.day);
+                closeModal();
+            }
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('adminModal').classList.remove('active');
+            pendingEdit = null;
+        }
+        
+        // Show export
+        function showExport() {
+            const month = parseInt(document.getElementById('month').value);
+            const year = parseInt(document.getElementById('year').value);
+            const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const days = getDaysInMonth(month, year);
+            const key = getCurrentKey();
+            const data = attendanceData[key];
+            
+            let output = `EMPLOYEE`;
+            for (let d = 1; d <= 31; d++) {
+                output += `\t${d <= days ? d : ''}`;
+            }
+            output += `\tP\tA\tAL\tWO\tPH\n`;
+            
+            EMPLOYEES.forEach(emp => {
+                output += emp;
+                for (let d = 0; d < 31; d++) {
+                    output += `\t${d < days ? data[emp][d] : ''}`;
+                }
+                const totals = calculateTotals(emp, data);
+                output += `\t${totals.P}\t${totals.A}\t${totals.AL}\t${totals.WO}\t${totals.PH}\n`;
+            });
+            
+            output += `\nDAILY TOTAL`;
+            for (let d = 0; d < 31; d++) {
+                if (d < days) {
+                    const dt = calculateDailyTotals(d, data);
+                    output += `\tP:${dt.P} L:${dt.L} A:${dt.A}`;
+                } else {
+                    output += `\t`;
+                }
+            }
+            
+            output += `\n\nLEGEND:\tA=ABSENT\tX=PRESENT\tWO=WEEKLY OFF\tPH=PUBLIC HOLIDAY\tAL=ANNUAL LEAVE`;
+            output += `\n\nMonth: ${monthNames[month]} ${year}`;
+            
+            document.getElementById('exportData').value = output;
+            document.getElementById('exportSection').style.display = 'block';
+            document.getElementById('exportSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Copy export data
+        function copyExportData() {
+            const textarea = document.getElementById('exportData');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const msg = document.getElementById('exportSuccess');
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 3000);
+            });
+        }
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
