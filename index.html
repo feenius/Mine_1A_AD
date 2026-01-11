@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>24/7 Mine Attendance System - Cloud Sync</title>
+    <title>24/7 Mine Attendance System</title>
     <style>
         * {
             margin: 0;
@@ -31,38 +31,6 @@
             border-bottom: 3px solid black;
             padding-bottom: 10px;
             text-align: center;
-        }
-        
-        .sync-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 12px;
-            z-index: 3000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        
-        .sync-status.synced {
-            background: #4CAF50;
-            color: white;
-        }
-        
-        .sync-status.syncing {
-            background: #ff9800;
-            color: white;
-        }
-        
-        .sync-status.error {
-            background: #f44336;
-            color: white;
-        }
-        
-        .sync-status.offline {
-            background: #9e9e9e;
-            color: white;
         }
         
         .controls {
@@ -244,7 +212,7 @@
             background: white;
             border: 4px solid black;
             padding: 30px;
-            max-width: 500px;
+            max-width: 400px;
             width: 90%;
         }
         
@@ -263,31 +231,61 @@
             gap: 10px;
         }
         
-        .setup-section {
-            background: #fff3e0;
-            border: 3px solid #ff9800;
-            padding: 20px;
+        .export-section {
+            background: #f9f9f9;
+            border: 2px solid black;
+            padding: 15px;
             margin-bottom: 20px;
         }
         
-        .setup-section h3 {
+        .export-section h3 {
             margin-bottom: 10px;
             font-size: 16px;
         }
         
-        .setup-input {
+        textarea {
             width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 11px;
             padding: 10px;
             border: 2px solid black;
-            margin: 10px 0;
-            font-family: monospace;
+            margin-top: 10px;
         }
         
-        code {
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border: 1px solid #ddd;
-            font-family: monospace;
+        .success-msg {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .instructions {
+            background: white;
+            border: 2px solid black;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .instructions h3 {
+            background: black;
+            color: white;
+            padding: 8px;
+            margin: 15px 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
         
         @media (max-width: 768px) {
@@ -317,37 +315,8 @@
     </style>
 </head>
 <body>
-    <!-- Sync Status Indicator -->
-    <div id="syncStatus" class="sync-status offline">⚠️ Not Configured</div>
-    
     <div class="container">
-        <h1>📋 24/7 MINE ATTENDANCE SYSTEM - CLOUD SYNC</h1>
-        
-        <!-- Setup Section -->
-        <div id="setupSection" class="setup-section">
-            <h3>⚙️ BACKEND CONFIGURATION REQUIRED</h3>
-            <p><strong>Follow these steps to enable cloud sync:</strong></p>
-            <ol style="margin-left: 20px; line-height: 1.8;">
-                <li>Go to <a href="https://supabase.com" target="_blank"><strong>supabase.com</strong></a></li>
-                <li>Click "Start your project" (FREE)</li>
-                <li>Create new project (name: mine-attendance)</li>
-                <li>Go to Settings → API</li>
-                <li>Copy your <strong>Project URL</strong> and <strong>anon public key</strong></li>
-                <li>Paste them below:</li>
-            </ol>
-            
-            <label style="margin-top: 15px; display: block;">Supabase URL:</label>
-            <input type="text" id="supabaseUrl" class="setup-input" placeholder="https://xxxxx.supabase.co">
-            
-            <label style="margin-top: 10px; display: block;">Supabase Key:</label>
-            <input type="text" id="supabaseKey" class="setup-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-            
-            <button class="btn" onclick="saveBackendConfig()" style="margin-top: 10px; width: 100%;">
-                ✅ SAVE & INITIALIZE BACKEND
-            </button>
-            
-            <p style="margin-top: 15px; font-size: 12px;"><strong>Note:</strong> This is a one-time setup. Your config will be saved securely.</p>
-        </div>
+        <h1>MINE 1A SHIFT ATTENDANCE SYSTEM FOR NLC INDIA</h1>
         
         <!-- Controls -->
         <div class="controls">
@@ -389,16 +358,9 @@
                 </div>
                 
                 <div class="control-group">
-                    <label>SYNC:</label>
-                    <button class="btn" onclick="manualSync()">
-                        🔄 SYNC NOW
-                    </button>
-                </div>
-                
-                <div class="control-group">
-                    <label>DEBUG:</label>
-                    <button class="btn" onclick="testConnection()">
-                        🔍 TEST
+                    <label>EXPORT:</label>
+                    <button class="btn" onclick="showExport()">
+                        📥 EXPORT DATA
                     </button>
                 </div>
                 
@@ -410,7 +372,10 @@
                 </div>
             </div>
             <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border: 2px solid #4CAF50; font-size: 12px; font-weight: bold;">
-                ☁️ CLOUD SYNC: Changes sync automatically across all devices
+                💾 AUTO-SAVE: All changes are automatically saved to browser storage
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border: 2px solid #ff9800; font-size: 12px; font-weight: bold;">
+                🔒 DEFAULT ADMIN PASSWORD: <code>FeeniusShyam</code> (Click CHANGE PASSWORD to update)
             </div>
         </div>
         
@@ -436,6 +401,17 @@
             </table>
         </div>
         
+        <!-- Export Section (Hidden by default) -->
+        <div class="export-section" id="exportSection" style="display: none;">
+            <h3>📋 COPY DATA FOR GOOGLE SHEETS</h3>
+            <p>1. Click the button below to copy</p>
+            <p>2. Open Google Sheets and create a new blank sheet</p>
+            <p>3. Click cell A1 and press Ctrl+V (or Cmd+V on Mac)</p>
+            <button class="btn" onclick="copyExportData()">📋 COPY TO CLIPBOARD</button>
+            <div id="exportSuccess" class="success-msg">✅ Copied! Now paste into Google Sheets</div>
+            <textarea id="exportData" readonly></textarea>
+        </div>
+        
         <!-- Admin Warning Modal -->
         <div class="modal" id="adminModal">
             <div class="modal-content">
@@ -447,6 +423,9 @@
                     <button class="btn" onclick="confirmEdit()">CONFIRM EDIT</button>
                 </div>
             </div>
+        </div>
+        
+        
         </div>
     </div>
     
@@ -467,19 +446,20 @@
         let attendanceData = {};
         let isAdminMode = false;
         let pendingEdit = null;
-        let supabaseClient = null;
-        let syncInterval = null;
         
         // Storage keys
+        const STORAGE_KEY = 'mine_attendance_data';
         const PASSWORD_KEY = 'mine_attendance_admin_password';
-        const CONFIG_KEY = 'mine_attendance_backend_config';
+        
+        // Default admin password (change this!)
         const DEFAULT_PASSWORD = 'FeeniusShyam';
         
-        // Initialize password
+        // Initialize admin password
         function initPassword() {
             const saved = localStorage.getItem(PASSWORD_KEY);
             if (!saved) {
-                localStorage.setItem(PASSWORD_KEY, btoa(DEFAULT_PASSWORD));
+                // First time - set default password
+                localStorage.setItem(PASSWORD_KEY, btoa(DEFAULT_PASSWORD)); // Base64 encode
             }
         }
         
@@ -515,334 +495,73 @@
             alert('✅ Admin password changed successfully!');
         }
         
-        // Update sync status
-        function updateSyncStatus(status, message) {
-            const statusEl = document.getElementById('syncStatus');
-            statusEl.className = 'sync-status ' + status;
-            statusEl.textContent = message;
+        // Load data from localStorage
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    attendanceData = JSON.parse(saved);
+                    console.log('✅ Data loaded from browser storage');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+            }
+            return false;
         }
         
-        // Save backend config
-        function saveBackendConfig() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            
-            if (!url || !key) {
-                alert('❌ Please enter both URL and Key');
-                return;
+        // Save data to localStorage
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(attendanceData));
+                console.log('✅ Data saved to browser storage');
+                showSaveNotification();
+            } catch (e) {
+                console.error('Error saving data:', e);
+                alert('⚠️ Could not save data. Browser storage may be full.');
             }
-            
-            if (!url.includes('supabase.co')) {
-                alert('❌ Invalid Supabase URL. Should contain "supabase.co"');
-                return;
+        }
+        
+        // Show save notification
+        function showSaveNotification() {
+            let notification = document.getElementById('saveNotification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'saveNotification';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    z-index: 2000;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                `;
+                document.body.appendChild(notification);
             }
-            
-            if (key.length < 100) {
-                alert('❌ API key seems too short. Make sure you copied the complete key.');
-                return;
-            }
-            
-            const config = { url, key };
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-            
-            alert('✅ Backend configured! Initializing connection...');
-            document.getElementById('setupSection').style.display = 'none';
-            
-            // Initialize with delay to show message
+            notification.textContent = '✅ Data Saved';
+            notification.style.display = 'block';
             setTimeout(() => {
-                initializeBackend();
-            }, 500);
+                notification.style.display = 'none';
+            }, 2000);
         }
         
-        // Initialize backend
-        async function initializeBackend() {
-            const configStr = localStorage.getItem(CONFIG_KEY);
-            if (!configStr) {
-                updateSyncStatus('offline', '⚠️ Not Configured');
-                return false;
-            }
+        // Initialize
+        function init() {
+            // Initialize password system
+            initPassword();
             
-            try {
-                const config = JSON.parse(configStr);
-                
-                // Validate config
-                if (!config.url || !config.key) {
-                    throw new Error('Invalid configuration');
-                }
-                
-                // Create Supabase client
-                supabaseClient = {
-                    url: config.url,
-                    key: config.key,
-                    headers: {
-                        'apikey': config.key,
-                        'Authorization': `Bearer ${config.key}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    }
-                };
-                
-                console.log('Backend initialized with URL:', config.url);
-                
-                // Test connection
-                const testResponse = await fetch(
-                    `${supabaseClient.url}/rest/v1/attendance?limit=1`,
-                    { 
-                        headers: supabaseClient.headers,
-                        method: 'GET'
-                    }
-                );
-                
-                if (!testResponse.ok) {
-                    const errorText = await testResponse.text();
-                    console.error('Connection test failed:', errorText);
-                    throw new Error(`Connection failed: ${testResponse.status}`);
-                }
-                
-                console.log('Connection test successful');
-                updateSyncStatus('synced', '✅ Connected');
-                startAutoSync();
-                await loadFromBackend();
-                return true;
-            } catch (error) {
-                console.error('Backend init error:', error);
-                updateSyncStatus('error', '❌ ' + error.message);
-                
-                // Show helpful error message
-                alert(`⚠️ Backend Connection Failed\n\n` +
-                      `Error: ${error.message}\n\n` +
-                      `Please check:\n` +
-                      `1. Your internet connection\n` +
-                      `2. Supabase URL is correct\n` +
-                      `3. API key is complete\n` +
-                      `4. Database table was created\n\n` +
-                      `The app will still work locally.`);
-                
-                return false;
-            }
-        }
-        
-        // Create table if not exists
-        async function createTableIfNotExists() {
-            // SQL to create table (execute this manually in Supabase SQL editor)
-            const sql = `
-CREATE TABLE IF NOT EXISTS attendance (
-    id SERIAL PRIMARY KEY,
-    month INTEGER NOT NULL,
-    year INTEGER NOT NULL,
-    employee TEXT NOT NULL,
-    day INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW(),
-    UNIQUE(month, year, employee, day)
-);
-
-CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, employee, day);
-            `;
+            // Load saved data first
+            loadFromStorage();
             
-            // Note: Table must be created manually in Supabase
-            console.log('Table SQL:', sql);
-        }
-        
-        // Load data from backend
-        async function loadFromBackend() {
-            if (!supabaseClient) {
-                console.log('No client configured');
-                return;
-            }
-            
-            updateSyncStatus('syncing', '⏳ Loading...');
-            
-            try {
-                const month = parseInt(document.getElementById('month').value);
-                const year = parseInt(document.getElementById('year').value);
-                
-                console.log('Loading data for:', month, year);
-                
-                const response = await fetch(
-                    `${supabaseClient.url}/rest/v1/attendance?month=eq.${month}&year=eq.${year}`,
-                    { 
-                        headers: supabaseClient.headers,
-                        method: 'GET'
-                    }
-                );
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
-                    throw new Error(`Failed to load: ${response.status} - ${errorText}`);
-                }
-                
-                const data = await response.json();
-                console.log('Loaded records:', data.length);
-                
-                // Convert to our format
-                const key = `${year}-${month}`;
-                if (!attendanceData[key]) {
-                    attendanceData[key] = {};
-                    EMPLOYEES.forEach(emp => {
-                        attendanceData[key][emp] = Array(getDaysInMonth(month, year)).fill('A');
-                    });
-                }
-                
-                // Apply loaded data
-                data.forEach(record => {
-                    if (attendanceData[key][record.employee]) {
-                        attendanceData[key][record.employee][record.day - 1] = record.status;
-                    }
-                });
-                
-                renderTable();
-                updateSyncStatus('synced', `✅ Synced (${data.length} records)`);
-            } catch (error) {
-                console.error('Load error:', error);
-                updateSyncStatus('error', '❌ ' + error.message.substring(0, 30));
-                
-                // Still render with local data
-                renderTable();
-            }
-        }
-        
-        // Save to backend
-        async function saveToBackend(employee, day, value) {
-            if (!supabaseClient) return;
-            
-            updateSyncStatus('syncing', '⏳ Saving...');
-            
-            try {
-                const month = parseInt(document.getElementById('month').value);
-                const year = parseInt(document.getElementById('year').value);
-                
-                const record = {
-                    month,
-                    year,
-                    employee,
-                    day: day + 1, // Convert 0-based to 1-based
-                    status: value,
-                    updated_at: new Date().toISOString()
-                };
-                
-                // Upsert (insert or update)
-                const response = await fetch(
-                    `${supabaseClient.url}/rest/v1/attendance`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            ...supabaseClient.headers,
-                            'Prefer': 'resolution=merge-duplicates'
-                        },
-                        body: JSON.stringify(record)
-                    }
-                );
-                
-                if (!response.ok) throw new Error('Failed to save');
-                
-                updateSyncStatus('synced', '✅ Synced');
-            } catch (error) {
-                console.error('Save error:', error);
-                updateSyncStatus('error', '❌ Save Failed');
-            }
-        }
-        
-        // Manual sync
-        async function manualSync() {
-            if (!supabaseClient) {
-                alert('⚠️ Backend not configured. Please configure backend first.');
-                return;
-            }
-            await loadFromBackend();
-        }
-        
-        // Test connection
-        async function testConnection() {
-            if (!supabaseClient) {
-                alert('⚠️ Backend not configured.\n\nPlease enter your Supabase credentials in the configuration section.');
-                return;
-            }
-            
-            updateSyncStatus('syncing', '⏳ Testing...');
-            
-            try {
-                console.log('Testing connection to:', supabaseClient.url);
-                
-                // Test 1: Basic connectivity
-                const response = await fetch(
-                    `${supabaseClient.url}/rest/v1/`,
-                    { 
-                        headers: supabaseClient.headers,
-                        method: 'GET'
-                    }
-                );
-                
-                console.log('Basic connectivity:', response.status);
-                
-                // Test 2: Table access
-                const tableResponse = await fetch(
-                    `${supabaseClient.url}/rest/v1/attendance?limit=1`,
-                    { 
-                        headers: supabaseClient.headers,
-                        method: 'GET'
-                    }
-                );
-                
-                console.log('Table access:', tableResponse.status);
-                
-                if (!tableResponse.ok) {
-                    const errorText = await tableResponse.text();
-                    throw new Error(`Table access failed: ${tableResponse.status}\n${errorText}`);
-                }
-                
-                const data = await tableResponse.json();
-                
-                updateSyncStatus('synced', '✅ Connected');
-                alert(`✅ Connection Successful!\n\n` +
-                      `Status: Connected\n` +
-                      `Records found: ${data.length}\n` +
-                      `Table: attendance\n\n` +
-                      `Everything is working correctly!`);
-                      
-            } catch (error) {
-                console.error('Test failed:', error);
-                updateSyncStatus('error', '❌ Test Failed');
-                
-                let helpMessage = '❌ Connection Test Failed\n\n';
-                
-                if (error.message.includes('404')) {
-                    helpMessage += 'Error: Table not found\n\n' +
-                                  'Solution:\n' +
-                                  '1. Open Supabase Dashboard\n' +
-                                  '2. Go to SQL Editor\n' +
-                                  '3. Run the CREATE TABLE script\n' +
-                                  '4. Try test again';
-                } else if (error.message.includes('401') || error.message.includes('403')) {
-                    helpMessage += 'Error: Authentication failed\n\n' +
-                                  'Solution:\n' +
-                                  '1. Check your API key is correct\n' +
-                                  '2. Make sure you copied the "anon public" key\n' +
-                                  '3. Key should be very long (200+ characters)';
-                } else if (error.message.includes('Failed to fetch')) {
-                    helpMessage += 'Error: Cannot reach server\n\n' +
-                                  'Solution:\n' +
-                                  '1. Check your internet connection\n' +
-                                  '2. Verify Supabase URL is correct\n' +
-                                  '3. URL should start with https://';
-                } else {
-                    helpMessage += `Error: ${error.message}\n\n` +
-                                  'Check browser console (F12) for details.';
-                }
-                
-                alert(helpMessage);
-            }
-        }
-        
-        // Start auto-sync
-        function startAutoSync() {
-            if (syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(() => {
-                loadFromBackend();
-            }, 30000); // Sync every 30 seconds
+            const now = new Date();
+            document.getElementById('month').value = now.getMonth() + 1;
+            document.getElementById('year').value = now.getFullYear();
+            loadAttendance();
+            renderTable();
         }
         
         // Get days in month
@@ -873,23 +592,27 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
         }
         
         // Switch month
-        async function switchMonth() {
+        function switchMonth() {
             loadAttendance();
-            await loadFromBackend();
+            renderTable();
         }
         
         // Toggle admin mode
         function toggleAdmin() {
             if (!isAdminMode) {
+                // Trying to enable admin mode - ask for password
                 const password = prompt('🔒 Enter Admin Password:');
                 
-                if (!password) return;
+                if (!password) {
+                    return; // User cancelled
+                }
                 
                 if (!verifyPassword(password)) {
                     alert('❌ Incorrect password! Access denied.');
                     return;
                 }
                 
+                // Password correct - enable admin mode
                 isAdminMode = true;
                 const btn = document.getElementById('adminBtn');
                 btn.textContent = '🔓 ADMIN MODE';
@@ -897,6 +620,7 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
                 btn.classList.remove('btn-white');
                 alert('✅ Admin mode enabled');
             } else {
+                // Disable admin mode
                 isAdminMode = false;
                 const btn = document.getElementById('adminBtn');
                 btn.textContent = '🔒 USER MODE';
@@ -991,21 +715,23 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
             const current = attendanceData[key][emp][day];
             
             if (!isAdminMode && current !== 'A') {
-                return;
+                return; // Locked for non-admin
             }
             
             if (isAdminMode && current !== 'A') {
+                // Show confirmation
                 pendingEdit = { empIdx, day, current };
                 document.getElementById('modalMessage').textContent = 
                     `Current value: ${current}\nThis will cycle to the next value.`;
                 document.getElementById('adminModal').classList.add('active');
             } else {
+                // Cycle value
                 cycleValue(empIdx, day);
             }
         }
         
         // Cycle value
-        async function cycleValue(empIdx, day) {
+        function cycleValue(empIdx, day) {
             const key = getCurrentKey();
             const emp = EMPLOYEES[empIdx];
             const current = attendanceData[key][emp][day];
@@ -1014,7 +740,7 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
             const next = cycle[(currentIdx + 1) % cycle.length];
             
             attendanceData[key][emp][day] = next;
-            await saveToBackend(emp, day, next);
+            saveToStorage(); // Save after each change
             renderTable();
         }
         
@@ -1032,26 +758,64 @@ CREATE INDEX IF NOT EXISTS idx_attendance_lookup ON attendance(month, year, empl
             pendingEdit = null;
         }
         
-        // Initialize
-        async function init() {
-            initPassword();
+        // Show export
+        function showExport() {
+            const month = parseInt(document.getElementById('month').value);
+            const year = parseInt(document.getElementById('year').value);
+            const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const days = getDaysInMonth(month, year);
+            const key = getCurrentKey();
+            const data = attendanceData[key];
             
-            const now = new Date();
-            document.getElementById('month').value = now.getMonth() + 1;
-            document.getElementById('year').value = now.getFullYear();
+            let output = `EMPLOYEE`;
+            for (let d = 1; d <= 31; d++) {
+                output += `\t${d <= days ? d : ''}`;
+            }
+            output += `\tP\tA\tAL\tWO\tPH\n`;
             
-            // Check if backend is configured
-            const configStr = localStorage.getItem(CONFIG_KEY);
-            if (configStr) {
-                document.getElementById('setupSection').style.display = 'none';
-                await initializeBackend();
+            EMPLOYEES.forEach(emp => {
+                output += emp;
+                for (let d = 0; d < 31; d++) {
+                    output += `\t${d < days ? data[emp][d] : ''}`;
+                }
+                const totals = calculateTotals(emp, data);
+                output += `\t${totals.P}\t${totals.A}\t${totals.AL}\t${totals.WO}\t${totals.PH}\n`;
+            });
+            
+            output += `\nDAILY TOTAL`;
+            for (let d = 0; d < 31; d++) {
+                if (d < days) {
+                    const dt = calculateDailyTotals(d, data);
+                    output += `\tP:${dt.P} L:${dt.L} A:${dt.A}`;
+                } else {
+                    output += `\t`;
+                }
             }
             
-            loadAttendance();
-            renderTable();
+            output += `\n\nLEGEND:\tA=ABSENT\tX=PRESENT\tWO=WEEKLY OFF\tPH=PUBLIC HOLIDAY\tAL=ANNUAL LEAVE`;
+            output += `\n\nMonth: ${monthNames[month]} ${year}`;
+            
+            document.getElementById('exportData').value = output;
+            document.getElementById('exportSection').style.display = 'block';
+            document.getElementById('exportSection').scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Start
+        // Copy export data
+        function copyExportData() {
+            const textarea = document.getElementById('exportData');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const msg = document.getElementById('exportSuccess');
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 3000);
+            });
+        }
+        
+        // Initialize on load
         init();
     </script>
 </body>
